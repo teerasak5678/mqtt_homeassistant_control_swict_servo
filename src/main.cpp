@@ -1,8 +1,8 @@
+#include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include <Adafruit_Sensor.h>
-#include <DHT.h>
-
+#include <Servo.h>
 
 const char* ssid = "Inspiration";
 const char* password =  "inspiration1";
@@ -10,8 +10,10 @@ const char* mqttServer = "mqtt.ppsmartbot.com";
 const int mqttPort = 1883;
 //const char* mqttUser = &quot;YourMqttUser&quot;;
 //const char* mqttPassword = &quot;YourMqttUserPassword&quot;;
-//int led1 = D0;
-//int led2 = D1;
+Servo myservo;  // create servo object to control a servo
+// twelve servo objects can be created on most boards
+int pos;
+
 int motor = D5;
 
 #define DHTTYPE DHT22
@@ -30,32 +32,43 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
      if (strPayload == "online")
      {
-       //getTemp();
-       client.publish("homeassistant/esp/test","1");
+
+       client.publish("homeassistant/esp/test","online");
        pinMode(motor, OUTPUT);
        digitalWrite(motor,LOW);
-       //pinMode(led1, OUTPUT);
-       //digitalWrite(led1,LOW);
-       //pinMode(led2, OUTPUT);
-       //digitalWrite(led2,LOW);
 
-
-       //delay(2000);
-      // pinMode(online, INPUT);
      }
      if (strPayload == "offline")
      {
-       client.publish("homeassistant/esp/test","0");
+       client.publish("homeassistant/esp/test","offline");
       pinMode(motor, OUTPUT);
       digitalWrite(motor,HIGH);
-      //pinMode(led1, OUTPUT);
-      //digitalWrite(led1,HIGH);
-      //pinMode(led2, OUTPUT);
-      //digitalWrite(led2,HIGH);
-      //delay(2000);
-      //pinMode(offline, INPUT);
+
+
      }
+
+     if (strPayload == "dooron")
+     {
+       client.publish("homeassistant/esp/test","dooron");
+       myservo.attach(5);  // attaches the servo on GIO2 to the servo object
+       for (pos = 0; pos <= 90; pos += 1) { // goes from 0 degrees to 180 degrees
+         // in steps of 1 degree
+         myservo.write(pos);              // tell servo to go to position in variable 'pos'
+       // waits 15ms for the servo to reach the position
+       }
+      }
+      if (strPayload == "dooroff")
+      {
+        client.publish("homeassistant/esp/test","dooroff");
+       myservo.attach(5);  // attaches the servo on GIO2 to the servo object
+       for (pos = 90; pos >= 0; pos -= 1) { // goes from 0 degrees to 180 degrees
+         // in steps of 1 degree
+         myservo.write(pos);              // tell servo to go to position in variable 'pos'
+                    // waits 15ms for the servo to reach the position
+       }
+      }
 }
+
 
 void setup() {
 
